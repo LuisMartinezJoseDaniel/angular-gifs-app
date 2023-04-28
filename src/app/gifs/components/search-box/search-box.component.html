@@ -1,0 +1,10 @@
+<h5>Buscar</h5>
+<!-- txtTagInput -> nombre del elemento personalizado, para poder obtener el valor en vez del event-->
+<!-- keyup.enter -> al presionar la tecla enter y levantarlo -->
+<input
+  (keyup.enter)="searchTag()"
+  #txtTagInput
+  type="text"
+  class="form-control"
+  placeholder="Buscar gifs"
+/>
