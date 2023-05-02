@@ -1,16 +1,64 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Gif, SearchResponse } from '../interfaces/gifs.interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class GifsService {
   private _tagsHistory: string[] = [];
+  private apiKey: string = 'Ed0d5iqypaU7JkCPW3hFB4fXeVsckAF2';
+  private url: string = 'http://api.giphy.com/v1/gifs';
+  public gifList: Gif[] = [];
 
-  constructor() {}
+  constructor(private http: HttpClient) {
+    this.loadLocalStorage();
+  }
 
   get tagsHistory() {
     return [...this._tagsHistory];
   }
 
-  searchTag( tag: string ): void {
+  private organizeHistory(tag: string) {
+    tag = tag.toLowerCase();
+    if (this._tagsHistory.includes(tag)) {
+      this._tagsHistory = this._tagsHistory.filter((t) => t !== tag);
+    }
     this._tagsHistory.unshift(tag);
+    this._tagsHistory = this._tagsHistory.splice(0, 10);
+    this.saveLocalStorage();
+  }
+
+  private saveLocalStorage(): void {
+    localStorage.setItem('history', JSON.stringify(this._tagsHistory));
+  }
+
+  private loadLocalStorage(): void {
+    if (!localStorage.getItem('history')) {
+      return;
+    }
+    this._tagsHistory = JSON.parse(localStorage.getItem('history')!);
+    this.loadFirstOfHistory();
+  }
+
+  private loadFirstOfHistory(): void {
+    if (this._tagsHistory.length === 0) return;
+
+    this.searchTag(this._tagsHistory[0]);
+  }
+
+  searchTag(tag: string) {
+    if (tag.length === 0) return;
+    this.organizeHistory(tag);
+
+    const params = new HttpParams()
+      .set('api_key', this.apiKey)
+      .set('q', tag)
+      .set('limit', 10);
+
+    // Observable
+    this.http
+      .get<SearchResponse>(`${this.url}/search`, { params })
+      .subscribe((resp) => {
+        this.gifList = resp.data;
+      });
   }
 }
